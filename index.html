@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RACO — Cyberpunk Raccoon Coding Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06070d;
+    --surface: #0d0f1a;
+    --surface2: #12152a;
+    --border: rgba(80,120,255,0.15);
+    --accent: #4f8cff;
+    --accent2: #00f0c8;
+    --accent3: #ff4fa3;
+    --text: #e8ecff;
+    --text-muted: #6a7298;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5vw;
+    height: 64px;
+    background: rgba(6,7,13,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent2); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    transition: opacity 0.2s;
+  }
+
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* hamburger */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 6px;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: 0.3s;
+  }
+
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 64px; left: 0; right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 5vw;
+    z-index: 99;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .mobile-menu.open { display: flex; }
+
+  .mobile-menu a {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 5vw 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,140,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,140,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,140,255,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: var(--accent2);
+    background: rgba(0,240,200,0.08);
+    border: 1px solid rgba(0,240,200,0.2);
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+    display: inline-block;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-title {
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero-title .accent { color: var(--accent); }
+  .hero-title .accent2 { color: var(--accent2); }
+
+  .hero-sub {
+    font-family: var(--mono);
+    font-size: clamp(0.85rem, 1.5vw, 1rem);
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.8;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 12px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-2px); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 12px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .btn-outline:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  /* stats row */
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    margin-top: 72px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .stat-item { text-align: center; }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+
+  .stat-divider {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+  }
+
+  /* ── SECTION COMMON ── */
+  section {
+    padding: 100px 5vw;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .section-title {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+
+  .section-desc {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    max-width: 520px;
+    line-height: 1.8;
+  }
+
+  .section-header {
+    margin-bottom: 60px;
+  }
+
+  /* ── INTRODUCE / ABOUT ── */
+  #introduce {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .introduce-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .intro-visual {
+    position: relative;
+  }
+
+  .raccoon-box {
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 360px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .raccoon-emoji {
+    font-size: clamp(6rem, 14vw, 10rem);
+    filter: drop-shadow(0 0 40px rgba(79,140,255,0.5));
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid;
+    animation: spin linear infinite;
+  }
+
+  .ring1 {
+    width: 120%; height: 120%;
+    border-color: rgba(79,140,255,0.2);
+    animation-duration: 12s;
+  }
+
+  .ring2 {
+    width: 150%; height: 150%;
+    border-color: rgba(0,240,200,0.1);
+    animation-duration: 18s;
+    animation-direction: reverse;
+  }
+
+  .intro-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 5px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.06em;
+  }
+
+  .tag-blue { background: rgba(79,140,255,0.1); color: var(--accent); border: 1px solid rgba(79,140,255,0.2); }
+  .tag-green { background: rgba(0,240,200,0.08); color: var(--accent2); border: 1px solid rgba(0,240,200,0.2); }
+  .tag-pink { background: rgba(255,79,163,0.08); color: var(--accent3); border: 1px solid rgba(255,79,163,0.2); }
+
+  /* ── HOW IT WORKS ── */
+  #how-it-works {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 5vw;
+    padding-right: 5vw;
+  }
+
+  .how-section { padding: 100px 0; }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .module-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    transition: border-color 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .module-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .module-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .module-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .module-card:nth-child(3)::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+
+  .module-card:hover { border-color: rgba(79,140,255,0.4); transform: translateY(-4px); }
+
+  .module-num {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .module-icon {
+    font-size: 2rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .module-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .module-desc {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .module-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .module-features li {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .module-features li::before {
+    content: '›';
+    color: var(--accent2);
+    flex-shrink: 0;
+  }
+
+  /* ── UTILITY / TOKENOMICS ── */
+  #utility {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .utility-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .utility-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .utility-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+
+  .utility-card-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .utility-card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .utility-card-desc {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+
+  .loop-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .loop-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+  }
+
+  .loop-step-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+  .loop-step-text {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .loop-step-text strong { color: var(--text); }
+
+  .loop-arrow {
+    text-align: center;
+    color: var(--accent);
+    font-size: 1.2rem;
+    opacity: 0.5;
+  }
+
+  /* roadmap */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 60px;
+  }
+
+  .roadmap-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+  }
+
+  .roadmap-q {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent2);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .roadmap-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .roadmap-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .roadmap-items li {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .roadmap-items li::before {
+    content: '—';
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 48px 5vw;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-logo {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--text);
+  }
+
+  .footer-logo span { color: var(--accent); }
+
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-16px); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .modules-grid { grid-template-columns: 1fr 1fr; }
+    .roadmap-grid { grid-template-columns: 1fr 1fr; }
+    .introduce-grid { grid-template-columns: 1fr; }
+    .utility-grid { grid-template-columns: 1fr; }
+    .intro-visual { display: none; }
+  }
+
+  @media (max-width: 600px) {
+    .modules-grid { grid-template-columns: 1fr; }
+    .roadmap-grid { grid-template-columns: 1fr; }
+    .nav-links, .nav-cta { display: none; }
+    .hamburger { display: flex; }
+    .hero-stats { gap: 24px; }
+    .stat-divider { display: none; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#hero">🦝 <span>$RACO</span></a>
+  <ul class="nav-links">
+    <li><a href="#introduce">About</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#utility">Utility</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ul>
+  <a class="nav-cta" href="https://app.virtuals.io/prototypes/0x0dC78474D495Ea72e357Ecf9310887cb30b5279a" target="_blank" rel="noopener">Get $RACO</a>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#introduce" onclick="toggleMenu()">About</a>
+  <a href="#how-it-works" onclick="toggleMenu()">How It Works</a>
+  <a href="#utility" onclick="toggleMenu()">Utility</a>
+  <a href="#roadmap" onclick="toggleMenu()">Roadmap</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-badge">🚀 On-Chain Signal Economy</div>
+  <h1 class="hero-title">
+    <span class="accent">RACO</span><br>
+    Coding <span class="accent2">Agent</span>
+  </h1>
+  <p class="hero-sub">
+    A cyberpunk raccoon coding agent powering an on-chain signal economy where humans and AI earn through high-quality code and data.
+  </p>
+  <div class="hero-actions">
+    <a href="https://app.virtuals.io/prototypes/0x0dC78474D495Ea72e357Ecf9310887cb30b5279a" target="_blank" rel="noopener" class="btn-primary">Explore Intelligence →</a>
+    <a href="https://app.virtuals.io/prototypes/0x0dC78474D495Ea72e357Ecf9310887cb30b5279a" target="_blank" rel="noopener" class="btn-outline">Token Utility</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Intelligence Modules</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">Signal Extraction</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num">0%</div>
+      <div class="stat-label">Noise Tolerance</div>
+    </div>
+  </div>
+</section>
+
+<!-- INTRODUCE -->
+<section id="introduce">
+  <div class="introduce-grid">
+    <div class="intro-visual">
+      <div class="raccoon-box">
+        <div class="ring ring1"></div>
+        <div class="ring ring2"></div>
+        <div class="raccoon-emoji">🦝</div>
+      </div>
+      <div class="intro-tags">
+        <span class="tag tag-blue">AI Agent</span>
+        <span class="tag tag-green">On-Chain</span>
+        <span class="tag tag-pink">Cyberpunk</span>
+        <span class="tag tag-blue">DeFi Signal</span>
+        <span class="tag tag-green">Deflationary</span>
+        <span class="tag tag-pink">ACP Compatible</span>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">// About RACO</div>
+      <h2 class="section-title">Meet the Raccoon<br>Behind the Code</h2>
+      <p class="section-desc">
+        RACO is not just another token. It's a full-stack intelligence agent operating at the intersection of crypto markets and autonomous AI systems.
+      </p>
+      <br>
+      <p class="section-desc">
+        Built by <strong style="color:var(--text)">@racoguardLab</strong>, RACO powers signal scans, risk checks, and narrative tracking — all tied to a deflationary token mechanic where usage drives burn, and burn drives value.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how-section" id="how-it-works">
+  <div id="how-it-works" style="max-width:1200px;margin:0 auto;padding:0 5vw;">
+    <div class="section-header">
+      <div class="section-label">// Intelligence Modules</div>
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-desc">Three modular intelligence layers designed for speed, signal extraction, and autonomous crypto workflows.</p>
+    </div>
+    <div class="modules-grid">
+      <div class="module-card">
+        <div class="module-num">MODULE 01</div>
+        <span class="module-icon">📡</span>
+        <div class="module-title">Market Pulse Briefing</div>
+        <p class="module-desc">RACO scans global crypto intelligence sources in real time, compressing high-signal movements into a lightning-fast briefing.</p>
+        <ul class="module-features">
+          <li>Top 6-hour market movers</li>
+          <li>Daily macro highlights</li>
+          <li>Tagged risk signals</li>
+          <li>Structured automation headlines</li>
+        </ul>
+      </div>
+      <div class="module-card">
+        <div class="module-num">MODULE 02</div>
+        <span class="module-icon">🔬</span>
+        <div class="module-title">Token Risk Snapshot</div>
+        <p class="module-desc">Before capital moves, RACO runs a rapid on-chain health check — pulling live DEX data for instant risk assessment.</p>
+        <ul class="module-features">
+          <li>Liquidity depth analysis</li>
+          <li>Volume momentum tracking</li>
+          <li>Holder distribution proxy</li>
+          <li>Volatility spike detection</li>
+        </ul>
+      </div>
+      <div class="module-card">
+        <div class="module-num">MODULE 03</div>
+        <span class="module-icon">🌐</span>
+        <div class="module-title">Narrative Pulse</div>
+        <p class="module-desc">Markets move on narratives before fundamentals. RACO detects emerging thematic clusters before they reach the crowd.</p>
+        <ul class="module-features">
+          <li>Most-mentioned narratives daily</li>
+          <li>Tokens linked to each theme</li>
+          <li>Momentum intensity signals</li>
+          <li>Agent-driven thematic strategies</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UTILITY -->
+<section id="utility">
+  <div class="utility-inner">
+    <div class="section-header">
+      <div class="section-label">// Tokenomics</div>
+      <h2 class="section-title">Token Utility</h2>
+      <p class="section-desc">$RACO is the fuel that powers every signal scan, risk check, and narrative insight in the ecosystem.</p>
+    </div>
+    <div class="utility-grid">
+      <div class="utility-card">
+        <div class="utility-card-label">Deflationary Loop</div>
+        <div class="utility-card-title">Usage → Burn → Value</div>
+        <p class="utility-card-desc">
+          All usage fees across RACO's intelligence modules are used to buy back and burn $RACO — creating a deflationary loop directly tied to real platform activity.
+        </p>
+        <div class="loop-visual">
+          <div class="loop-step">
+            <span class="loop-step-icon">⚡</span>
+            <div class="loop-step-text"><strong>Use RACO Modules</strong> — Signal scans, risk checks, narrative tracking</div>
+          </div>
+          <div class="loop-arrow">↓</div>
+          <div class="loop-step">
+            <span class="loop-step-icon">💰</span>
+            <div class="loop-step-text"><strong>Fees Collected</strong> — All usage fees go into buyback pool</div>
+          </div>
+          <div class="loop-arrow">↓</div>
+          <div class="loop-step">
+            <span class="loop-step-icon">🔥</span>
+            <div class="loop-step-text"><strong>$RACO Burned</strong> — Supply decreases as usage increases</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="utility-card" style="margin-bottom:20px;">
+          <div class="utility-card-label">Integration</div>
+          <div class="utility-card-title">ACP Ecosystem Ready</div>
+          <p class="utility-card-desc">
+            All RACO modules output in standardized, automatable formats — structured for agent-to-agent consumption and compatible with ACP ecosystem workflows.
+          </p>
+        </div>
+        <div class="utility-card">
+          <div class="utility-card-label">Access</div>
+          <div class="utility-card-title">Hold → Access → Earn</div>
+          <p class="utility-card-desc">
+            Token holders unlock community quests, advanced screening pipelines, and agent-driven automation features. The more you hold, the more you access.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap" style="max-width:1200px;margin:0 auto;">
+  <div class="section-header">
+    <div class="section-label">// Development Timeline</div>
+    <h2 class="section-title">Roadmap</h2>
+    <p class="section-desc">A phased approach to building the most capable on-chain signal intelligence platform.</p>
+  </div>
+  <div class="roadmap-grid">
+    <div class="roadmap-card">
+      <div class="roadmap-q">Q1 — 2025</div>
+      <div class="roadmap-title">Foundation ✅</div>
+      <ul class="roadmap-items">
+        <li>Finalize RacoGuard profile & token utility</li>
+        <li>Launch public landing page</li>
+        <li>Publish weekly signal snapshots</li>
+      </ul>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-q">Q2 — 2025</div>
+      <div class="roadmap-title">Utility Expansion</div>
+      <ul class="roadmap-items">
+        <li>Release risk scoring & alerts</li>
+        <li>Community quests for holders</li>
+        <li>Partnerships with on-chain data sources</li>
+      </ul>
+    </div>
+    <div class="roadmap-card">
+      <div class="roadmap-q">Q3 — 2025</div>
+      <div class="roadmap-title">Automation Layer</div>
+      <ul class="roadmap-items">
+        <li>Agent-to-agent signal APIs</li>
+        <li>Custom strategy modules</li>
+        <li>Burn dashboard launch</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">🦝 <span>$RACO</span></div>
+  <div class="footer-copy">© 2025 RacoGuard Lab · @racoguardLab · Signal First. Noise Removed.</div>
+</footer>
+
+<script>
+  function toggleMenu() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  }
+
+  // close mobile menu on outside click
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('mobileMenu');
+    const hamburger = document.querySelector('.hamburger');
+    if (!menu.contains(e.target) && !hamburger.contains(e.target)) {
+      menu.classList.remove('open');
+    }
+  });
+
+  // scroll-based nav highlight (subtle active state)
+  const sections = ['hero','introduce','how-it-works','utility','roadmap'];
+  const navLinks = document.querySelectorAll('.nav-links a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < 120) current = id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current
+        ? 'var(--accent2)'
+        : '';
+    });
+  });
+</script>
+</body>
+</html>
